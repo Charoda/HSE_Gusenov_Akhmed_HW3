@@ -23,10 +23,20 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
             detail="Username or email already registered"
         )
 
+    try:
+        hashed = get_password_hash(user_data.password)
+    except ValueError as e:
+        # bcrypt has a hard limit of 72 bytes for passwords.
+        # Ensure the user sees a 422 rather than an unhandled 500.
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e)
+        )
+
     user = User(
         username=user_data.username,
         email=user_data.email,
-        hashed_password=get_password_hash(user_data.password)
+        hashed_password=hashed
     )
     db.add(user)
     db.commit()
