@@ -23,11 +23,18 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
             detail="Username or email already registered"
         )
 
+    # bcrypt supports passwords no longer than 72 bytes (UTF-8).
+    # Validate explicitly here so we never crash the server during hashing.
+    pw_bytes = user_data.password.encode("utf-8", errors="ignore")
+    if len(pw_bytes) > 72:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"password must be 72 bytes or fewer when UTF-8 encoded (got {len(pw_bytes)})"
+        )
+
     try:
         hashed = get_password_hash(user_data.password)
-    except ValueError as e:
-        # bcrypt has a hard limit of 72 bytes for passwords.
-        # Ensure the user sees a 422 rather than an unhandled 500.
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e)

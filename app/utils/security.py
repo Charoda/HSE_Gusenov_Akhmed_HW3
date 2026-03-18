@@ -7,12 +7,28 @@ from app.config import settings
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
+def _normalize_password_for_bcrypt(password: str) -> str:
+    """Ensure password is a UTF-8 string no longer than 72 bytes.
+
+    bcrypt (and passlib's bcrypt backend) raises if the input is over 72 bytes.
+    To avoid crashes, we truncate to 72 bytes (the same behavior that bcrypt itself
+    would have if it accepted longer inputs).
+    """
+
+    pw_bytes = password.encode("utf-8", errors="ignore")
+    if len(pw_bytes) <= 72:
+        return password
+
+    truncated = pw_bytes[:72]
+    return truncated.decode("utf-8", errors="ignore")
+
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return pwd_context.verify(_normalize_password_for_bcrypt(plain_password), hashed_password)
 
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    return pwd_context.hash(_normalize_password_for_bcrypt(password))
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
