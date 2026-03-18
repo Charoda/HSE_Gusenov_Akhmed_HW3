@@ -51,6 +51,11 @@ class TokenData(BaseModel):
     username: Optional[str] = None
 
 
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
 class LinkBase(BaseModel):
     original_url: HttpUrl
     custom_alias: Optional[str] = Field(None, max_length=50)
