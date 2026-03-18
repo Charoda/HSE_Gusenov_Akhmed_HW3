@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from app.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 
 def _normalize_password_for_bcrypt(password: str) -> str:
