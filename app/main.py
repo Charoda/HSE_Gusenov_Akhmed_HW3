@@ -26,7 +26,7 @@ def startup_event():
 app.include_router(auth_router)
 app.include_router(links_router)
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 async def root():
     return {"message": "URL Shortener API", "docs": "/docs"}
 
