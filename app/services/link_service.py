@@ -159,7 +159,7 @@ class LinkService:
         # Normalize URL by removing trailing slash for consistent search
         normalized_url = original_url.rstrip('/')
         links = db.query(Link).filter(
-            Link.original_url.like(f"{normalized_url}%"),
+            ((Link.original_url == normalized_url) | (Link.original_url == normalized_url + '/')),
             Link.is_active == True
         ).all()
         return links
