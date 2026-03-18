@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, HttpUrl, Field
+from pydantic import BaseModel, EmailStr, HttpUrl, Field, field_validator
 from datetime import datetime
 from typing import Optional
 
@@ -13,10 +13,24 @@ class UserCreate(UserBase):
     # Reject longer passwords early to avoid runtime crashes.
     password: str = Field(..., min_length=6, max_length=72)
 
+    @field_validator("password")
+    def password_max_bytes(cls, value: str) -> str:
+        if len(value.encode("utf-8")) > 72:
+            raise ValueError("password must be 72 bytes or fewer when UTF-8 encoded")
+        return value
+
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     password: Optional[str] = Field(None, min_length=6, max_length=72)
+
+    @field_validator("password")
+    def password_max_bytes(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+        if len(value.encode("utf-8")) > 72:
+            raise ValueError("password must be 72 bytes or fewer when UTF-8 encoded")
+        return value
 
 
 class UserResponse(UserBase):
