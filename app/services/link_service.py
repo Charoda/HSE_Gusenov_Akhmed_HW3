@@ -1,6 +1,6 @@
 import secrets
 import string
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import Optional, Tuple
@@ -22,7 +22,7 @@ class LinkService:
     def is_expired(expires_at: Optional[datetime]) -> bool:
         if expires_at is None:
             return False
-        return datetime.utcnow() > expires_at
+        return datetime.now(timezone.utc) > expires_at
 
     @classmethod
     def create_link(
@@ -141,7 +141,7 @@ class LinkService:
         link = db.query(Link).filter(Link.short_code == short_code).first()
         if link:
             link.clicks += 1
-            link.last_clicked_at = datetime.utcnow()
+            link.last_clicked_at = datetime.now(timezone.utc)
             db.commit()
             db.refresh(link)
 
@@ -156,14 +156,17 @@ class LinkService:
 
     @classmethod
     def search_by_original_url(cls, db: Session, original_url: str) -> list[Link]:
+        # Normalize URL by removing trailing slash for consistent search
+        normalized_url = original_url.rstrip('/')
         links = db.query(Link).filter(
-            Link.original_url == original_url
+            Link.original_url.like(f"{normalized_url}%"),
+            Link.is_active == True
         ).all()
         return links
 
     @classmethod
     def cleanup_expired_links(cls, db: Session) -> int:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         expired = db.query(Link).filter(
             Link.expires_at.isnot(None),
             Link.expires_at < now
@@ -181,7 +184,7 @@ class LinkService:
 
     @classmethod
     def cleanup_unused_links(cls, db: Session, days: int) -> int:
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
         unused = db.query(Link).filter(
             Link.last_clicked_at < cutoff_date,
             Link.clicks > 0
