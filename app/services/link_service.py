@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import Optional, Tuple
-from app.models import Link, User
+from app.entity import Link, User
 from app.schemas import LinkCreate, LinkUpdate
 from app.config import settings
 from app.utils.redis_client import redis_client
