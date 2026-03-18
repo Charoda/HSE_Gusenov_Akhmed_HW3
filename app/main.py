@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth_router, links_router
+from app.api.auth_router import router as auth_router
+from app.api.links_router import router as links_router
 from app.config import settings
 from app.initialization import init_app
 
