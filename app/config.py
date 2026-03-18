@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from pydantic import Field, field_validator
+from pydantic import Field, model_validator
 from typing import Optional
 
 
@@ -22,20 +22,16 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
 
-    @field_validator('DATABASE_URL', mode='before')
-    @classmethod
-    def build_database_url(cls, v, values):
-        if v is not None:
-            return v
-
-        # Build DATABASE_URL from individual components if available
-        user = values.get('POSTGRES_USER', 'postgres')
-        password = values.get('POSTGRES_PASSWORD', 'postgres')
-        host = values.get('POSTGRES_HOST', 'localhost')
-        port = values.get('POSTGRES_PORT', 5432)
-        db = values.get('POSTGRES_DB', 'url_shortener')
-
-        return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}"
+    @model_validator(mode='after')
+    def build_database_url(self):
+        if self.DATABASE_URL is None:
+            user = self.POSTGRES_USER or 'postgres'
+            password = self.POSTGRES_PASSWORD or 'postgres'
+            host = self.POSTGRES_HOST or 'localhost'
+            port = self.POSTGRES_PORT or 5432
+            db = self.POSTGRES_DB or 'url_shortener'
+            self.DATABASE_URL = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}"
+        return self
 
 
 settings = Settings()
