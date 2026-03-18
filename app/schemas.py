@@ -9,12 +9,14 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=6)
+    # bcrypt (used by passlib) supports passwords up to 72 bytes.
+    # Reject longer passwords early to avoid runtime crashes.
+    password: str = Field(..., min_length=6, max_length=72)
 
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
-    password: Optional[str] = Field(None, min_length=6)
+    password: Optional[str] = Field(None, min_length=6, max_length=72)
 
 
 class UserResponse(UserBase):
