@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from datetime import datetime
 from app.database import get_db
-from app.models import Link, User
+from app.entity import Link, User
 from app.schemas import LinkCreate, LinkUpdate, LinkResponse, LinkStats, LinkSearchResponse
 from app.services.link_service import LinkService
 from app.utils.redis_client import redis_client
